@@ -145,17 +145,7 @@ atoi:
     pop     edx             ; restore edx from the value we pushed onto the stack at the start
     pop     ecx             ; restore ecx from the value we pushed onto the stack at the start
     pop     ebx             ; restore ebx from the value we pushed onto the stack at the start
-    ret
-
-   debugger:
-    push edx
-    push ecx
-    push ebx
-    push eax
-    pop  eax 
-    pop  ebx
-    pop  ecx
-    pop  edx    
+    ret  
 ;------------------------------------------
 ; void exit()
 ; Exit program and restore resources

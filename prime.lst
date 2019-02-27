@@ -1,0 +1,374 @@
+     1                                  ;a program to display the all primes less than or equal to the specified input integer
+     2                                  
+     3                                  ;functions.asm includes some useful API for basic functions:
+     4                                  ;  sprint(eax),sprintLF(eax)     eax : the address of the specified string to be displayed.
+     5                                  ;  atoi(eax)                     eax : the address of the ascii characters to be transformed,
+     6                                                                       ; and the result is also remained in it.
+     7                                  ;  iprint(eax),iprintfLF(eax)   eax : the value to be dispalyed.
+     8                                  ;  quit()  
+     9                                  
+    10                                  %include  'functions.asm'
+     1                              <1> ;------------------------------------------
+     2                              <1> ; void iprint(Integer number)
+     3                              <1> ; Integer printing function (itoa)
+     4                              <1> iprint:
+     5 00000000 50                  <1>     push    eax             ; preserve eax on the stack to be restored after function runs
+     6 00000001 51                  <1>     push    ecx             ; preserve ecx on the stack to be restored after function runs
+     7 00000002 52                  <1>     push    edx             ; preserve edx on the stack to be restored after function runs
+     8 00000003 56                  <1>     push    esi             ; preserve esi on the stack to be restored after function runs
+     9 00000004 B900000000          <1>     mov     ecx, 0          ; counter of how many bytes we need to print in the end
+    10                              <1>  
+    11                              <1> divideLoop:
+    12 00000009 41                  <1>     inc     ecx             ; count each byte to print - number of characters
+    13 0000000A BA00000000          <1>     mov     edx, 0          ; empty edx
+    14 0000000F BE0A000000          <1>     mov     esi, 10         ; mov 10 into esi
+    15 00000014 F7FE                <1>     idiv    esi             ; divide eax by esi
+    16 00000016 83C230              <1>     add     edx, 48         ; convert edx to it's ascii representation - edx holds the remainder after a divide instruction
+    17 00000019 52                  <1>     push    edx             ; push edx (string representation of an intger) onto the stack
+    18 0000001A 83F800              <1>     cmp     eax, 0          ; can the integer be divided anymore?
+    19 0000001D 75EA                <1>     jnz     divideLoop      ; jump if not zero to the label divideLoop
+    20                              <1>  
+    21                              <1> printLoop:
+    22 0000001F 49                  <1>     dec     ecx             ; count down each byte that we put on the stack
+    23 00000020 89E0                <1>     mov     eax, esp        ; mov the stack pointer into eax for printing
+    24 00000022 E830000000          <1>     call    sprint          ; call our string print function
+    25 00000027 58                  <1>     pop     eax             ; remove last character from the stack to move esp forward
+    26 00000028 83F900              <1>     cmp     ecx, 0          ; have we printed all bytes we pushed onto the stack?
+    27 0000002B 75F2                <1>     jnz     printLoop       ; jump is not zero to the label printLoop
+    28                              <1>  
+    29 0000002D 5E                  <1>     pop     esi             ; restore esi from the value we pushed onto the stack at the start
+    30 0000002E 5A                  <1>     pop     edx             ; restore edx from the value we pushed onto the stack at the start
+    31 0000002F 59                  <1>     pop     ecx             ; restore ecx from the value we pushed onto the stack at the start
+    32 00000030 58                  <1>     pop     eax             ; restore eax from the value we pushed onto the stack at the start
+    33 00000031 C3                  <1>     ret
+    34                              <1>  
+    35                              <1>  
+    36                              <1> ;------------------------------------------
+    37                              <1> ; void iprintLF(Integer number)
+    38                              <1> ; Integer printing function with linefeed (itoa)
+    39                              <1> iprintLF:
+    40 00000032 E8C9FFFFFF          <1>     call    iprint          ; call our integer printing function
+    41                              <1>  
+    42 00000037 50                  <1>     push    eax             ; push eax onto the stack to preserve it while we use the eax register in this function
+    43 00000038 B80A000000          <1>     mov     eax, 0Ah        ; move 0Ah into eax - 0Ah is the ascii character for a linefeed
+    44 0000003D 50                  <1>     push    eax             ; push the linefeed onto the stack so we can get the address
+    45 0000003E 89E0                <1>     mov     eax, esp        ; move the address of the current stack pointer into eax for sprint
+    46 00000040 E812000000          <1>     call    sprint          ; call our sprint function
+    47 00000045 58                  <1>     pop     eax             ; remove our linefeed character from the stack
+    48 00000046 58                  <1>     pop     eax             ; restore the original value of eax before our function was called
+    49 00000047 C3                  <1>     ret
+    50                              <1>  
+    51                              <1>  
+    52                              <1> ;------------------------------------------
+    53                              <1> ; int slen(String message)
+    54                              <1> ; String length calculation function
+    55                              <1> slen:
+    56 00000048 53                  <1>     push    ebx
+    57 00000049 89C3                <1>     mov     ebx, eax
+    58                              <1>  
+    59                              <1> nextchar:
+    60 0000004B 803800              <1>     cmp     byte [eax], 0
+    61 0000004E 7403                <1>     jz      finished
+    62 00000050 40                  <1>     inc     eax
+    63 00000051 EBF8                <1>     jmp     nextchar
+    64                              <1>  
+    65                              <1> finished:
+    66 00000053 29D8                <1>     sub     eax, ebx
+    67 00000055 5B                  <1>     pop     ebx
+    68 00000056 C3                  <1>     ret
+    69                              <1>  
+    70                              <1>  
+    71                              <1> ;------------------------------------------
+    72                              <1> ; void sprint(String message)
+    73                              <1> ; String printing function
+    74                              <1> sprint:
+    75 00000057 52                  <1>     push    edx
+    76 00000058 51                  <1>     push    ecx
+    77 00000059 53                  <1>     push    ebx
+    78 0000005A 50                  <1>     push    eax
+    79 0000005B E8E8FFFFFF          <1>     call    slen
+    80                              <1>  
+    81 00000060 89C2                <1>     mov     edx, eax
+    82 00000062 58                  <1>     pop     eax
+    83                              <1>  
+    84 00000063 89C1                <1>     mov     ecx, eax
+    85 00000065 BB01000000          <1>     mov     ebx, 1
+    86 0000006A B804000000          <1>     mov     eax, 4
+    87 0000006F CD80                <1>     int     80h
+    88                              <1>  
+    89 00000071 5B                  <1>     pop     ebx
+    90 00000072 59                  <1>     pop     ecx
+    91 00000073 5A                  <1>     pop     edx
+    92 00000074 C3                  <1>     ret
+    93                              <1>  
+    94                              <1>  
+    95                              <1> ;------------------------------------------
+    96                              <1> ; void sprintLF(String message)
+    97                              <1> ; String printing with line feed function
+    98                              <1> sprintLF:
+    99 00000075 E8DDFFFFFF          <1>     call    sprint
+   100                              <1>  
+   101 0000007A 50                  <1>     push    eax
+   102 0000007B B80A000000          <1>     mov     eax, 0AH
+   103 00000080 50                  <1>     push    eax
+   104 00000081 89E0                <1>     mov     eax, esp
+   105 00000083 E8CFFFFFFF          <1>     call    sprint
+   106 00000088 58                  <1>     pop     eax
+   107 00000089 58                  <1>     pop     eax
+   108 0000008A C3                  <1>     ret
+   109                              <1>  
+   110                              <1>  ;------------------------------------------
+   111                              <1> ; int atoi(Integer number)
+   112                              <1> ; Ascii to integer function (atoi)
+   113                              <1> atoi:
+   114 0000008B 53                  <1>     push    ebx             ; preserve ebx on the stack to be restored after function runs
+   115 0000008C 51                  <1>     push    ecx             ; preserve ecx on the stack to be restored after function runs
+   116 0000008D 52                  <1>     push    edx             ; preserve edx on the stack to be restored after function runs
+   117 0000008E 56                  <1>     push    esi             ; preserve esi on the stack to be restored after function runs
+   118 0000008F 89C6                <1>     mov     esi, eax        ; move pointer in eax into esi (our number to convert)
+   119 00000091 B800000000          <1>     mov     eax, 0          ; initialise eax with decimal value 0
+   120 00000096 B900000000          <1>     mov     ecx, 0          ; initialise ecx with decimal value 0
+   121                              <1>  
+   122                              <1> .multiplyLoop:
+   123 0000009B 31DB                <1>     xor     ebx, ebx        ; resets both lower and uppper bytes of ebx to be 0
+   124 0000009D 8A1C0E              <1>     mov     bl, [esi+ecx]   ; move a single byte into ebx register's lower half
+   125 000000A0 80FB30              <1>     cmp     bl, 48          ; compare ebx register's lower half value against ascii value 48 (char value 0)
+   126 000000A3 7C1E                <1>     jl      .finished       ; jump if less than to label finished
+   127 000000A5 80FB39              <1>     cmp     bl, 57          ; compare ebx register's lower half value against ascii value 57 (char value 9)
+   128 000000A8 7F19                <1>     jg      .finished       ; jump if greater than to label finished
+   129 000000AA 80FB0A              <1>     cmp     bl, 10          ; compare ebx register's lower half value against ascii value 10 (linefeed character)
+   130 000000AD 7414                <1>     je      .finished       ; jump if equal to label finished
+   131 000000AF 80FB00              <1>     cmp     bl, 0           ; compare ebx register's lower half value against decimal value 0 (end of string)
+   132 000000B2 740F                <1>     jz      .finished       ; jump if zero to label finished
+   133                              <1>  
+   134 000000B4 80EB30              <1>     sub     bl, 48          ; convert ebx register's lower half to decimal representation of ascii value
+   135 000000B7 01D8                <1>     add     eax, ebx        ; add ebx to our interger value in eax
+   136 000000B9 BB0A000000          <1>     mov     ebx, 10         ; move decimal value 10 into ebx
+   137 000000BE F7E3                <1>     mul     ebx             ; multiply eax by ebx to get place value
+   138 000000C0 41                  <1>     inc     ecx             ; increment ecx (our counter register)
+   139 000000C1 EBD8                <1>     jmp     .multiplyLoop   ; continue multiply loop
+   140                              <1>  
+   141                              <1> .finished:
+   142 000000C3 BB0A000000          <1>     mov     ebx, 10         ; move decimal value 10 into ebx
+   143 000000C8 F7F3                <1>     div     ebx             ; divide eax by value in ebx (in this case 10)
+   144 000000CA 5E                  <1>     pop     esi             ; restore esi from the value we pushed onto the stack at the start
+   145 000000CB 5A                  <1>     pop     edx             ; restore edx from the value we pushed onto the stack at the start
+   146 000000CC 59                  <1>     pop     ecx             ; restore ecx from the value we pushed onto the stack at the start
+   147 000000CD 5B                  <1>     pop     ebx             ; restore ebx from the value we pushed onto the stack at the start
+   148 000000CE C3                  <1>     ret  
+   149                              <1> ;------------------------------------------
+   150                              <1> ; void exit()
+   151                              <1> ; Exit program and restore resources
+   152                              <1> quit:
+   153 000000CF BB00000000          <1>     mov     ebx, 0
+   154 000000D4 B801000000          <1>     mov     eax, 1
+   155 000000D9 CD80                <1>     int     80h
+   156 000000DB C3                  <1>     ret
+    11                                  %define   PerByte 8
+    12                                  %define   INPUTARRAYLENGTH 10
+    13                                  %define   Max 10000000
+    14                                  %define   true '1'
+    15                                  %define   false '0'
+    16                                  
+    17                                  SECTION .data
+    18 00000000 506C6561736520656E-     welcomeString        db      'Please enter a number which at the range of 1-10000000: ',0h 
+    18 00000009 7465722061206E756D-
+    18 00000012 626572207768696368-
+    18 0000001B 206174207468652072-
+    18 00000024 616E6765206F662031-
+    18 0000002D 2D3130303030303030-
+    18 00000036 3A2000             
+    19                                  ; message string asking user for input
+    20                                  
+    21 00000039 7468652077686F6C65-     resultString         db      'the whole primers which less than ', 0h
+    21 00000042 207072696D65727320-
+    21 0000004B 7768696368206C6573-
+    21 00000054 73207468616E2000   
+    22                                   ; message string to use after user has input an valid integer   
+    23                                  
+    24 0000005C 496E76616C69642069-     StringFor0           db      'Invalid input: 0 ):',0h
+    24 00000065 6E7075743A20302029-
+    24 0000006E 3A00               
+    25 00000070 546865726520697320-     StringFor1           db      'There is no primer less or equal than 1,and 1 is not a primer.',0h ;
+    25 00000079 6E6F207072696D6572-
+    25 00000082 206C657373206F7220-
+    25 0000008B 657175616C20746861-
+    25 00000094 6E20312C616E642031-
+    25 0000009D 206973206E6F742061-
+    25 000000A6 207072696D65722E00 
+    26 000000AF 536F7272792C746865-     StringFor2Big0       db      'Sorry,the number ',0h
+    26 000000B8 206E756D6265722000 
+    27 000000C1 20697320746F6F2062-     StringFor2Big1       db      ' is too big to analyze ):',0h
+    27 000000CA 696720746F20616E61-
+    27 000000D3 6C797A6520293A00   
+    28 000000DB 5A65726F204572726F-     StringForZeroError   db      'Zero Error occurs',0h
+    28 000000E4 72206F636375727300 
+    29 000000ED 5A65726F204572726F-     StringForError       db      'Zero Error occurs',0h
+    29 000000F6 72206F636375727300 
+    30 000000FF 546865726520617265-     StringForCount0      db      'There are ',0h
+    30 00000108 2000               
+    31 0000010A 207072696D65732061-     StringForCount1      db      ' primes at all (:',0h
+    31 00000113 7420616C6C20283A00 
+    32 0000011C 206973206120707269-     StringIsPrime        db      ' is a prime.',0h
+    32 00000125 6D652E00           
+    33 00000129 206973206E6F742061-     StringIsNotPrime     db      ' is not a prime.',0h
+    33 00000132 207072696D652E00   
+    34 0000013A 3A00                    colon                db      ':',0h              
+    35 0000013C 2000                    space                db      ' ',0h  
+    36 0000013E 3100<rept>              FlagBytes: times Max db      true,0h
+    37                                   
+    38                                  SECTION .bss
+    39 00000000 <res 0000000A>          inputInt:  resb  INPUTARRAYLENGTH ; reserve a space in memory for the users input string
+    40                                   
+    41                                  SECTION .text
+    42                                  global  main
+    43                                   
+    44                                  main:
+    45 000000DC B8[00000000]               mov   eax, welcomeString       ; display the welcome String
+    46 000000E1 E871FFFFFF                 call  sprint
+    47 000000E6 BA0A000000                 mov   edx, INPUTARRAYLENGTH    ; number of bytes to read
+    48 000000EB B9[00000000]               mov   ecx, inputInt            ; reserved space to store our input (known as a buffer)
+    49 000000F0 BB00000000                 mov   ebx, 0                   ; write to the STDIN file
+    50 000000F5 B803000000                 mov   eax, 3                   ; invoke SYS_READ (kernel opcode 3)
+    51 000000FA CD80                       int   80h
+    52                                   
+    53 000000FC B8[00000000]               mov   eax, inputInt            ; move our buffer into eax (Note: input contains a linefeed)
+    54 00000101 E885FFFFFF                 call  atoi                     ; ascii to int ,both stored in eax
+    55 00000106 50                         push  eax                      ; preserve the integer
+    56                                      
+    57                                     ; begin test for input integer
+    58 00000107 83F800                     cmp   eax, 0                   ;test for 0
+    59 0000010A 750F                       jne   .testFor1
+    60 0000010C B8[5C000000]               mov   eax,StringFor0
+    61 00000111 E85FFFFFFF                 call  sprintLF
+    62 00000116 E8B4FFFFFF                 call  quit
+    63                                     
+    64                                  .testFor1:
+    65 0000011B 83F801                     cmp   eax, 1                   ;test for 1
+    66 0000011E 750F                       jne   .testForTooBig
+    67 00000120 B8[70000000]               mov   eax, StringFor1
+    68 00000125 E84BFFFFFF                 call  sprintLF
+    69 0000012A E8A0FFFFFF                 call  quit
+    70                                  
+    71                                  .testForTooBig:
+    72 0000012F 3D80969800                 cmp   eax, Max                 ; test for too big
+    73 00000134 7E1F                       jle   .continue
+    74 00000136 B8[AF000000]               mov   eax, StringFor2Big0
+    75 0000013B E817FFFFFF                 call  sprint
+    76 00000140 58                         pop   eax
+    77 00000141 E8BAFEFFFF                 call  iprint
+    78 00000146 B8[C1000000]               mov   eax, StringFor2Big1
+    79 0000014B E825FFFFFF                 call  sprintLF
+    80 00000150 E87AFFFFFF                 call  quit
+    81                                     
+    82                                  .continue:        
+    83 00000155 B8[39000000]               mov   eax, resultString        ;print the result
+    84 0000015A E8F8FEFFFF                 call  sprint
+    85 0000015F 58                         pop   eax                      ; restore the integer to eax
+    86 00000160 50                         push  eax                      ; preserve the integer
+    87 00000161 89C3                       mov   ebx, eax                 ; copy the integer to ebx
+    88 00000163 E898FEFFFF                 call  iprint
+    89                                  
+    90 00000168 B8[3A010000]               mov   eax, colon               ; print a ":"
+    91 0000016D E803FFFFFF                 call  sprintLF
+    92                                  
+    93 00000172 BE02000000                 mov   esi, 2                   ; begin with 2
+    94                                  
+    95                                      
+    96                                  .main: 
+    97 00000177 89D8                       mov   eax, ebx                 ; when beginning every loop,firstly restore the integer to eax
+    98 00000179 39F0                       cmp   eax, esi                 ; copmare the eax with the integer
+    99 0000017B 7430                       je    .resultAnalyze           ; if equals goto resultAnalyze
+   100                                      
+   101                                     ; test if the value in esi is already excluded,if true go to loop_end_work
+   102 0000017D 8B14F5[3E010000]           mov   edx, [FlagBytes+PerByte*esi]
+   103 00000184 83FA30                     cmp   edx, false
+   104 00000187 7421                       je    .loop_end_work
+   105                                  
+   106 00000189 BA00000000                 mov   edx, 0                   ;necessray for div
+   107 0000018E F7F6                       div   esi
+   108 00000190 89C1                       mov   ecx, eax                 ; keep the result in ecx
+   109                                      
+   110                                  .child_loop:
+   111 00000192 83F901                     cmp   ecx, 1                   ; compare the result with 1 
+   112 00000195 7E13                       jle   .loop_end_work           ; if le ,goto the loop end,notices that it is accpeted by default.
+   113 00000197 89F0                       mov   eax, esi                 ; multiple work
+   114 00000199 F7E1                       mul   ecx
+   115 0000019B BA30000000                 mov   edx, false               ; exclude the following integers.
+   116 000001A0 8914C5[3E010000]           mov   [FlagBytes+PerByte*eax], edx
+   117 000001A7 49                         dec   ecx 
+   118 000001A8 EBE8                       jmp   .child_loop              ; begin next child loop
+   119                                  
+   120                                  .loop_end_work:
+   121 000001AA 46                         inc   esi
+   122 000001AB EBCA                       jmp   .main 
+   123                                     
+   124                                  .resultAnalyze:                   ; analyze the flag bytes to selct the primes.
+   125 000001AD 89D8                       mov   eax, ebx                 ; restore the integer
+   126                                     
+   127 000001AF BE00000000                 mov   esi, 0                   ; initalize the counter
+   128                                     
+   129 000001B4 BB02000000                 mov   ebx, 2                   ; obviously, test begins with 2
+   130                                     
+   131                                  .loopTest:
+   132 000001B9 39D8                       cmp   eax, ebx                 ; check if ends
+   133 000001BB 7C31                       jl    .count
+   134 000001BD 50                         push  eax                      ; preserve
+   135                                     
+   136 000001BE 89D8                       mov   eax, ebx                 ; get the correspond flag value
+   137 000001C0 BA08000000                 mov   edx, PerByte
+   138 000001C5 F7E2                       mul   edx
+   139 000001C7 05[3E010000]               add   eax, FlagBytes
+   140 000001CC E8BAFEFFFF                 call  atoi
+   141                                  
+   142 000001D1 83F800                     cmp   eax, 0                   ; compare, if true,skip print
+   143 000001D4 7414                       je    .skipPrint
+   144                                     
+   145 000001D6 50                         push  eax                      ; print the accepted number following a space 
+   146 000001D7 89D8                       mov   eax, ebx
+   147 000001D9 E822FEFFFF                 call  iprint
+   148 000001DE B8[3C010000]               mov   eax, space
+   149 000001E3 E86FFEFFFF                 call  sprint
+   150 000001E8 58                         pop   eax
+   151                                  
+   152 000001E9 46                         inc   esi                      ; increase the counter
+   153                                  
+   154                                  .skipPrint:
+   155 000001EA 58                         pop   eax                      ; restore
+   156                                    
+   157 000001EB 43                         inc   ebx   
+   158 000001EC EBCB                       jmp   .loopTest
+   159                                  
+   160                                  ; print messgae about the counter
+   161                                  .count:
+   162 000001EE 50                         push  eax
+   163 000001EF B8[3C010000]               mov   eax, space
+   164 000001F4 E87CFEFFFF                 call  sprintLF                        
+   165 000001F9 B8[FF000000]               mov   eax, StringForCount0     
+   166 000001FE E854FEFFFF                 call  sprint 
+   167 00000203 89F0                       mov   eax, esi
+   168 00000205 E8F6FDFFFF                 call  iprint
+   169 0000020A B8[0A010000]               mov   eax, StringForCount1
+   170 0000020F E861FEFFFF                 call  sprintLF
+   171 00000214 58                         pop   eax
+   172                                  ; test itself
+   173                                  .testItself:
+   174 00000215 E8E6FDFFFF                 call  iprint 
+   175 0000021A 50                         push  eax
+   176 0000021B BA08000000                 mov   edx, PerByte
+   177 00000220 F7E2                       mul   edx
+   178 00000222 05[3E010000]               add   eax, FlagBytes
+   179 00000227 E85FFEFFFF                 call  atoi
+   180 0000022C 83F800                     cmp   eax, 0
+   181 0000022F 740D                       je    .notPrime
+   182 00000231 B8[1C010000]               mov   eax, StringIsPrime
+   183 00000236 E83AFEFFFF                 call  sprintLF
+   184 0000023B 58                         pop   eax
+   185 0000023C EB0B                       jmp   .isPrime 
+   186                                  .notPrime:
+   187 0000023E B8[29010000]               mov   eax, StringIsNotPrime
+   188 00000243 E82DFEFFFF                 call  sprintLF  
+   189 00000248 58                         pop   eax
+   190                                  .isPrime:
+   191                                  .exit:
+   192 00000249 E881FEFFFF                  call    quit
