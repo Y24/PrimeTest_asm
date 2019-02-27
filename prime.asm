@@ -4,7 +4,7 @@
 ;  sprint(eax),sprintLF(eax)     eax : the address of the specified string to be displayed.
 ;  atoi(eax)                     eax : the address of the ascii characters to be transformed,
                                      ; and the result is also remained in it.
-;  iprint(eax),iprintfLF(eax)   eax : the value to be dispalyed.
+;  iprint(eax),iprintLF(eax)   eax : the value to be dispalyed.
 ;  quit()  
 
 %include  'functions.asm'
@@ -188,5 +188,6 @@ main:
    call  sprintLF  
    pop   eax
 .isPrime:
+;to be continued
 .exit:
     call    quit
