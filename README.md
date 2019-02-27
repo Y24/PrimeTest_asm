@@ -1,2 +1,2 @@
 # PrimeTest_asm
-a prime test program which use x86 assembly language.
+a prime test program which using x86 assembly language.
