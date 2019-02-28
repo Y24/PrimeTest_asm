@@ -4,7 +4,7 @@
      4                                  ;  sprint(eax),sprintLF(eax)     eax : the address of the specified string to be displayed.
      5                                  ;  atoi(eax)                     eax : the address of the ascii characters to be transformed,
      6                                                                       ; and the result is also remained in it.
-     7                                  ;  iprint(eax),iprintfLF(eax)   eax : the value to be dispalyed.
+     7                                  ;  iprint(eax),iprintLF(eax)   eax : the value to be dispalyed.
      8                                  ;  quit()  
      9                                  
     10                                  %include  'functions.asm'
@@ -166,209 +166,211 @@
    156 000000DB C3                  <1>     ret
     11                                  %define   PerByte 8
     12                                  %define   INPUTARRAYLENGTH 10
-    13                                  %define   Max 10000000
-    14                                  %define   true '1'
-    15                                  %define   false '0'
-    16                                  
-    17                                  SECTION .data
-    18 00000000 506C6561736520656E-     welcomeString        db      'Please enter a number which at the range of 1-10000000: ',0h 
-    18 00000009 7465722061206E756D-
-    18 00000012 626572207768696368-
-    18 0000001B 206174207468652072-
-    18 00000024 616E6765206F662031-
-    18 0000002D 2D3130303030303030-
-    18 00000036 3A2000             
-    19                                  ; message string asking user for input
-    20                                  
-    21 00000039 7468652077686F6C65-     resultString         db      'the whole primers which less than ', 0h
-    21 00000042 207072696D65727320-
-    21 0000004B 7768696368206C6573-
-    21 00000054 73207468616E2000   
-    22                                   ; message string to use after user has input an valid integer   
-    23                                  
-    24 0000005C 496E76616C69642069-     StringFor0           db      'Invalid input: 0 ):',0h
-    24 00000065 6E7075743A20302029-
-    24 0000006E 3A00               
-    25 00000070 546865726520697320-     StringFor1           db      'There is no primer less or equal than 1,and 1 is not a primer.',0h ;
-    25 00000079 6E6F207072696D6572-
-    25 00000082 206C657373206F7220-
-    25 0000008B 657175616C20746861-
-    25 00000094 6E20312C616E642031-
-    25 0000009D 206973206E6F742061-
-    25 000000A6 207072696D65722E00 
-    26 000000AF 536F7272792C746865-     StringFor2Big0       db      'Sorry,the number ',0h
-    26 000000B8 206E756D6265722000 
-    27 000000C1 20697320746F6F2062-     StringFor2Big1       db      ' is too big to analyze ):',0h
-    27 000000CA 696720746F20616E61-
-    27 000000D3 6C797A6520293A00   
-    28 000000DB 5A65726F204572726F-     StringForZeroError   db      'Zero Error occurs',0h
-    28 000000E4 72206F636375727300 
-    29 000000ED 5A65726F204572726F-     StringForError       db      'Zero Error occurs',0h
-    29 000000F6 72206F636375727300 
-    30 000000FF 546865726520617265-     StringForCount0      db      'There are ',0h
-    30 00000108 2000               
-    31 0000010A 207072696D65732061-     StringForCount1      db      ' primes at all (:',0h
-    31 00000113 7420616C6C20283A00 
-    32 0000011C 206973206120707269-     StringIsPrime        db      ' is a prime.',0h
-    32 00000125 6D652E00           
-    33 00000129 206973206E6F742061-     StringIsNotPrime     db      ' is not a prime.',0h
-    33 00000132 207072696D652E00   
-    34 0000013A 3A00                    colon                db      ':',0h              
-    35 0000013C 2000                    space                db      ' ',0h  
-    36 0000013E 3100<rept>              FlagBytes: times Max db      true,0h
-    37                                   
-    38                                  SECTION .bss
-    39 00000000 <res 0000000A>          inputInt:  resb  INPUTARRAYLENGTH ; reserve a space in memory for the users input string
-    40                                   
-    41                                  SECTION .text
-    42                                  global  main
-    43                                   
-    44                                  main:
-    45 000000DC B8[00000000]               mov   eax, welcomeString       ; display the welcome String
-    46 000000E1 E871FFFFFF                 call  sprint
-    47 000000E6 BA0A000000                 mov   edx, INPUTARRAYLENGTH    ; number of bytes to read
-    48 000000EB B9[00000000]               mov   ecx, inputInt            ; reserved space to store our input (known as a buffer)
-    49 000000F0 BB00000000                 mov   ebx, 0                   ; write to the STDIN file
-    50 000000F5 B803000000                 mov   eax, 3                   ; invoke SYS_READ (kernel opcode 3)
-    51 000000FA CD80                       int   80h
-    52                                   
-    53 000000FC B8[00000000]               mov   eax, inputInt            ; move our buffer into eax (Note: input contains a linefeed)
-    54 00000101 E885FFFFFF                 call  atoi                     ; ascii to int ,both stored in eax
-    55 00000106 50                         push  eax                      ; preserve the integer
-    56                                      
-    57                                     ; begin test for input integer
-    58 00000107 83F800                     cmp   eax, 0                   ;test for 0
-    59 0000010A 750F                       jne   .testFor1
-    60 0000010C B8[5C000000]               mov   eax,StringFor0
-    61 00000111 E85FFFFFFF                 call  sprintLF
-    62 00000116 E8B4FFFFFF                 call  quit
-    63                                     
-    64                                  .testFor1:
-    65 0000011B 83F801                     cmp   eax, 1                   ;test for 1
-    66 0000011E 750F                       jne   .testForTooBig
-    67 00000120 B8[70000000]               mov   eax, StringFor1
-    68 00000125 E84BFFFFFF                 call  sprintLF
-    69 0000012A E8A0FFFFFF                 call  quit
-    70                                  
-    71                                  .testForTooBig:
-    72 0000012F 3D80969800                 cmp   eax, Max                 ; test for too big
-    73 00000134 7E1F                       jle   .continue
-    74 00000136 B8[AF000000]               mov   eax, StringFor2Big0
-    75 0000013B E817FFFFFF                 call  sprint
-    76 00000140 58                         pop   eax
-    77 00000141 E8BAFEFFFF                 call  iprint
-    78 00000146 B8[C1000000]               mov   eax, StringFor2Big1
-    79 0000014B E825FFFFFF                 call  sprintLF
-    80 00000150 E87AFFFFFF                 call  quit
-    81                                     
-    82                                  .continue:        
-    83 00000155 B8[39000000]               mov   eax, resultString        ;print the result
-    84 0000015A E8F8FEFFFF                 call  sprint
-    85 0000015F 58                         pop   eax                      ; restore the integer to eax
-    86 00000160 50                         push  eax                      ; preserve the integer
-    87 00000161 89C3                       mov   ebx, eax                 ; copy the integer to ebx
-    88 00000163 E898FEFFFF                 call  iprint
-    89                                  
-    90 00000168 B8[3A010000]               mov   eax, colon               ; print a ":"
-    91 0000016D E803FFFFFF                 call  sprintLF
-    92                                  
-    93 00000172 BE02000000                 mov   esi, 2                   ; begin with 2
-    94                                  
-    95                                      
-    96                                  .main: 
-    97 00000177 89D8                       mov   eax, ebx                 ; when beginning every loop,firstly restore the integer to eax
-    98 00000179 39F0                       cmp   eax, esi                 ; copmare the eax with the integer
-    99 0000017B 7430                       je    .resultAnalyze           ; if equals goto resultAnalyze
-   100                                      
-   101                                     ; test if the value in esi is already excluded,if true go to loop_end_work
-   102 0000017D 8B14F5[3E010000]           mov   edx, [FlagBytes+PerByte*esi]
-   103 00000184 83FA30                     cmp   edx, false
-   104 00000187 7421                       je    .loop_end_work
-   105                                  
-   106 00000189 BA00000000                 mov   edx, 0                   ;necessray for div
-   107 0000018E F7F6                       div   esi
-   108 00000190 89C1                       mov   ecx, eax                 ; keep the result in ecx
-   109                                      
-   110                                  .child_loop:
-   111 00000192 83F901                     cmp   ecx, 1                   ; compare the result with 1 
-   112 00000195 7E13                       jle   .loop_end_work           ; if le ,goto the loop end,notices that it is accpeted by default.
-   113 00000197 89F0                       mov   eax, esi                 ; multiple work
-   114 00000199 F7E1                       mul   ecx
-   115 0000019B BA30000000                 mov   edx, false               ; exclude the following integers.
-   116 000001A0 8914C5[3E010000]           mov   [FlagBytes+PerByte*eax], edx
-   117 000001A7 49                         dec   ecx 
-   118 000001A8 EBE8                       jmp   .child_loop              ; begin next child loop
-   119                                  
-   120                                  .loop_end_work:
-   121 000001AA 46                         inc   esi
-   122 000001AB EBCA                       jmp   .main 
-   123                                     
-   124                                  .resultAnalyze:                   ; analyze the flag bytes to selct the primes.
-   125 000001AD 89D8                       mov   eax, ebx                 ; restore the integer
-   126                                     
-   127 000001AF BE00000000                 mov   esi, 0                   ; initalize the counter
-   128                                     
-   129 000001B4 BB02000000                 mov   ebx, 2                   ; obviously, test begins with 2
-   130                                     
-   131                                  .loopTest:
-   132 000001B9 39D8                       cmp   eax, ebx                 ; check if ends
-   133 000001BB 7C31                       jl    .count
-   134 000001BD 50                         push  eax                      ; preserve
-   135                                     
-   136 000001BE 89D8                       mov   eax, ebx                 ; get the correspond flag value
-   137 000001C0 BA08000000                 mov   edx, PerByte
-   138 000001C5 F7E2                       mul   edx
-   139 000001C7 05[3E010000]               add   eax, FlagBytes
-   140 000001CC E8BAFEFFFF                 call  atoi
-   141                                  
-   142 000001D1 83F800                     cmp   eax, 0                   ; compare, if true,skip print
-   143 000001D4 7414                       je    .skipPrint
-   144                                     
-   145 000001D6 50                         push  eax                      ; print the accepted number following a space 
-   146 000001D7 89D8                       mov   eax, ebx
-   147 000001D9 E822FEFFFF                 call  iprint
-   148 000001DE B8[3C010000]               mov   eax, space
-   149 000001E3 E86FFEFFFF                 call  sprint
-   150 000001E8 58                         pop   eax
-   151                                  
-   152 000001E9 46                         inc   esi                      ; increase the counter
-   153                                  
-   154                                  .skipPrint:
-   155 000001EA 58                         pop   eax                      ; restore
-   156                                    
-   157 000001EB 43                         inc   ebx   
-   158 000001EC EBCB                       jmp   .loopTest
-   159                                  
-   160                                  ; print messgae about the counter
-   161                                  .count:
-   162 000001EE 50                         push  eax
-   163 000001EF B8[3C010000]               mov   eax, space
-   164 000001F4 E87CFEFFFF                 call  sprintLF                        
-   165 000001F9 B8[FF000000]               mov   eax, StringForCount0     
-   166 000001FE E854FEFFFF                 call  sprint 
-   167 00000203 89F0                       mov   eax, esi
-   168 00000205 E8F6FDFFFF                 call  iprint
-   169 0000020A B8[0A010000]               mov   eax, StringForCount1
-   170 0000020F E861FEFFFF                 call  sprintLF
-   171 00000214 58                         pop   eax
-   172                                  ; test itself
-   173                                  .testItself:
-   174 00000215 E8E6FDFFFF                 call  iprint 
-   175 0000021A 50                         push  eax
-   176 0000021B BA08000000                 mov   edx, PerByte
-   177 00000220 F7E2                       mul   edx
-   178 00000222 05[3E010000]               add   eax, FlagBytes
-   179 00000227 E85FFEFFFF                 call  atoi
-   180 0000022C 83F800                     cmp   eax, 0
-   181 0000022F 740D                       je    .notPrime
-   182 00000231 B8[1C010000]               mov   eax, StringIsPrime
-   183 00000236 E83AFEFFFF                 call  sprintLF
-   184 0000023B 58                         pop   eax
-   185 0000023C EB0B                       jmp   .isPrime 
-   186                                  .notPrime:
-   187 0000023E B8[29010000]               mov   eax, StringIsNotPrime
-   188 00000243 E82DFEFFFF                 call  sprintLF  
-   189 00000248 58                         pop   eax
-   190                                  .isPrime:
-   191                                  .exit:
-   192 00000249 E881FEFFFF                  call    quit
+    13                                  %define   Max 50000000
+    14                                  %define   MaxInput 10000000
+    15                                  %define   true '1'
+    16                                  %define   false '0'
+    17                                  
+    18                                  SECTION .data
+    19 00000000 506C6561736520656E-     welcomeString        db      'Please enter a number which at the range of 1-10000000: ',0h 
+    19 00000009 7465722061206E756D-
+    19 00000012 626572207768696368-
+    19 0000001B 206174207468652072-
+    19 00000024 616E6765206F662031-
+    19 0000002D 2D3130303030303030-
+    19 00000036 3A2000             
+    20                                  ; message string asking user for input
+    21                                  
+    22 00000039 7468652077686F6C65-     resultString         db      'the whole primers which less than ', 0h
+    22 00000042 207072696D65727320-
+    22 0000004B 7768696368206C6573-
+    22 00000054 73207468616E2000   
+    23                                   ; message string to use after user has input an valid integer   
+    24                                  
+    25 0000005C 496E76616C69642069-     StringFor0           db      'Invalid input: 0 ):',0h
+    25 00000065 6E7075743A20302029-
+    25 0000006E 3A00               
+    26 00000070 546865726520697320-     StringFor1           db      'There is no primer less or equal than 1,and 1 is not a primer.',0h ;
+    26 00000079 6E6F207072696D6572-
+    26 00000082 206C657373206F7220-
+    26 0000008B 657175616C20746861-
+    26 00000094 6E20312C616E642031-
+    26 0000009D 206973206E6F742061-
+    26 000000A6 207072696D65722E00 
+    27 000000AF 536F7272792C746865-     StringFor2Big0       db      'Sorry,the number ',0h
+    27 000000B8 206E756D6265722000 
+    28 000000C1 20697320746F6F2062-     StringFor2Big1       db      ' is too big to analyze ):',0h
+    28 000000CA 696720746F20616E61-
+    28 000000D3 6C797A6520293A00   
+    29 000000DB 5A65726F204572726F-     StringForZeroError   db      'Zero Error occurs',0h
+    29 000000E4 72206F636375727300 
+    30 000000ED 5A65726F204572726F-     StringForError       db      'Zero Error occurs',0h
+    30 000000F6 72206F636375727300 
+    31 000000FF 546865726520617265-     StringForCount0      db      'There are ',0h
+    31 00000108 2000               
+    32 0000010A 207072696D65732061-     StringForCount1      db      ' primes at all (:',0h
+    32 00000113 7420616C6C20283A00 
+    33 0000011C 206973206120707269-     StringIsPrime        db      ' is a prime.',0h
+    33 00000125 6D652E00           
+    34 00000129 206973206E6F742061-     StringIsNotPrime     db      ' is not a prime.',0h
+    34 00000132 207072696D652E00   
+    35 0000013A 3A00                    colon                db      ':',0h              
+    36 0000013C 2000                    space                db      ' ',0h  
+    37 0000013E 3100<rept>              FlagBytes: times Max db      true,0h
+    38                                   
+    39                                  SECTION .bss
+    40 00000000 <res 0000000A>          inputInt:  resb  INPUTARRAYLENGTH ; reserve a space in memory for the users input string
+    41                                   
+    42                                  SECTION .text
+    43                                  global  main
+    44                                   
+    45                                  main:
+    46 000000DC B8[00000000]               mov   eax, welcomeString       ; display the welcome String
+    47 000000E1 E871FFFFFF                 call  sprint
+    48 000000E6 BA0A000000                 mov   edx, INPUTARRAYLENGTH    ; number of bytes to read
+    49 000000EB B9[00000000]               mov   ecx, inputInt            ; reserved space to store our input (known as a buffer)
+    50 000000F0 BB00000000                 mov   ebx, 0                   ; write to the STDIN file
+    51 000000F5 B803000000                 mov   eax, 3                   ; invoke SYS_READ (kernel opcode 3)
+    52 000000FA CD80                       int   80h
+    53                                   
+    54 000000FC B8[00000000]               mov   eax, inputInt            ; move our buffer into eax (Note: input contains a linefeed)
+    55 00000101 E885FFFFFF                 call  atoi                     ; ascii to int ,both stored in eax
+    56 00000106 50                         push  eax                      ; preserve the integer
+    57                                      
+    58                                     ; begin test for input integer
+    59 00000107 83F800                     cmp   eax, 0                   ;test for 0
+    60 0000010A 750F                       jne   .testFor1
+    61 0000010C B8[5C000000]               mov   eax,StringFor0
+    62 00000111 E85FFFFFFF                 call  sprintLF
+    63 00000116 E8B4FFFFFF                 call  quit
+    64                                     
+    65                                  .testFor1:
+    66 0000011B 83F801                     cmp   eax, 1                   ;test for 1
+    67 0000011E 750F                       jne   .testForTooBig
+    68 00000120 B8[70000000]               mov   eax, StringFor1
+    69 00000125 E84BFFFFFF                 call  sprintLF
+    70 0000012A E8A0FFFFFF                 call  quit
+    71                                  
+    72                                  .testForTooBig:
+    73 0000012F 3D80969800                 cmp   eax, MaxInput                 ; test for too big
+    74 00000134 7E1F                       jle   .continue
+    75 00000136 B8[AF000000]               mov   eax, StringFor2Big0
+    76 0000013B E817FFFFFF                 call  sprint
+    77 00000140 58                         pop   eax
+    78 00000141 E8BAFEFFFF                 call  iprint
+    79 00000146 B8[C1000000]               mov   eax, StringFor2Big1
+    80 0000014B E825FFFFFF                 call  sprintLF
+    81 00000150 E87AFFFFFF                 call  quit
+    82                                     
+    83                                  .continue:        
+    84 00000155 B8[39000000]               mov   eax, resultString        ;print the result
+    85 0000015A E8F8FEFFFF                 call  sprint
+    86 0000015F 58                         pop   eax                      ; restore the integer to eax
+    87 00000160 50                         push  eax                      ; preserve the integer
+    88 00000161 89C3                       mov   ebx, eax                 ; copy the integer to ebx
+    89 00000163 E898FEFFFF                 call  iprint
+    90                                  
+    91 00000168 B8[3A010000]               mov   eax, colon               ; print a ":"
+    92 0000016D E803FFFFFF                 call  sprintLF
+    93                                  
+    94 00000172 BE02000000                 mov   esi, 2                   ; begin with 2
+    95                                  
+    96                                      
+    97                                  .main: 
+    98 00000177 89D8                       mov   eax, ebx                 ; when beginning every loop,firstly restore the integer to eax
+    99 00000179 39F0                       cmp   eax, esi                 ; copmare the eax with the integer
+   100 0000017B 7430                       je    .resultAnalyze           ; if equals goto resultAnalyze
+   101                                      
+   102                                     ; test if the value in esi is already excluded,if true go to loop_end_work
+   103 0000017D 8B14F5[3E010000]           mov   edx, [FlagBytes+PerByte*esi]
+   104 00000184 83FA30                     cmp   edx, false
+   105 00000187 7421                       je    .loop_end_work
+   106                                  
+   107 00000189 BA00000000                 mov   edx, 0                   ;necessray for div
+   108 0000018E F7F6                       div   esi
+   109 00000190 89C1                       mov   ecx, eax                 ; keep the result in ecx
+   110                                      
+   111                                  .child_loop:
+   112 00000192 83F901                     cmp   ecx, 1                   ; compare the result with 1 
+   113 00000195 7E13                       jle   .loop_end_work           ; if le ,goto the loop end,notices that it is accpeted by default.
+   114 00000197 89F0                       mov   eax, esi                 ; multiple work
+   115 00000199 F7E1                       mul   ecx
+   116 0000019B BA30000000                 mov   edx, false               ; exclude the following integers.
+   117 000001A0 8914C5[3E010000]           mov   [FlagBytes+PerByte*eax], edx
+   118 000001A7 49                         dec   ecx 
+   119 000001A8 EBE8                       jmp   .child_loop              ; begin next child loop
+   120                                  
+   121                                  .loop_end_work:
+   122 000001AA 46                         inc   esi
+   123 000001AB EBCA                       jmp   .main 
+   124                                     
+   125                                  .resultAnalyze:                   ; analyze the flag bytes to selct the primes.
+   126 000001AD 89D8                       mov   eax, ebx                 ; restore the integer
+   127                                     
+   128 000001AF BE00000000                 mov   esi, 0                   ; initalize the counter
+   129                                     
+   130 000001B4 BB02000000                 mov   ebx, 2                   ; obviously, test begins with 2
+   131                                     
+   132                                  .loopTest:
+   133 000001B9 39D8                       cmp   eax, ebx                 ; check if ends
+   134 000001BB 7C31                       jl    .count
+   135 000001BD 50                         push  eax                      ; preserve
+   136                                     
+   137 000001BE 89D8                       mov   eax, ebx                 ; get the correspond flag value
+   138 000001C0 BA08000000                 mov   edx, PerByte
+   139 000001C5 F7E2                       mul   edx
+   140 000001C7 05[3E010000]               add   eax, FlagBytes
+   141 000001CC E8BAFEFFFF                 call  atoi
+   142                                  
+   143 000001D1 83F800                     cmp   eax, 0                   ; compare, if true,skip print
+   144 000001D4 7414                       je    .skipPrint
+   145                                     
+   146 000001D6 50                         push  eax                      ; print the accepted number following a space 
+   147 000001D7 89D8                       mov   eax, ebx
+   148 000001D9 E822FEFFFF                 call  iprint
+   149 000001DE B8[3C010000]               mov   eax, space
+   150 000001E3 E86FFEFFFF                 call  sprint
+   151 000001E8 58                         pop   eax
+   152                                  
+   153 000001E9 46                         inc   esi                      ; increase the counter
+   154                                  
+   155                                  .skipPrint:
+   156 000001EA 58                         pop   eax                      ; restore
+   157                                    
+   158 000001EB 43                         inc   ebx   
+   159 000001EC EBCB                       jmp   .loopTest
+   160                                  
+   161                                  ; print messgae about the counter
+   162                                  .count:
+   163 000001EE 50                         push  eax
+   164 000001EF B8[3C010000]               mov   eax, space
+   165 000001F4 E87CFEFFFF                 call  sprintLF                        
+   166 000001F9 B8[FF000000]               mov   eax, StringForCount0     
+   167 000001FE E854FEFFFF                 call  sprint 
+   168 00000203 89F0                       mov   eax, esi
+   169 00000205 E8F6FDFFFF                 call  iprint
+   170 0000020A B8[0A010000]               mov   eax, StringForCount1
+   171 0000020F E861FEFFFF                 call  sprintLF
+   172 00000214 58                         pop   eax
+   173                                  ; test itself
+   174                                  .testItself:
+   175 00000215 E8E6FDFFFF                 call  iprint 
+   176 0000021A 50                         push  eax
+   177 0000021B BA08000000                 mov   edx, PerByte
+   178 00000220 F7E2                       mul   edx
+   179 00000222 05[3E010000]               add   eax, FlagBytes
+   180 00000227 E85FFEFFFF                 call  atoi
+   181 0000022C 83F800                     cmp   eax, 0
+   182 0000022F 740D                       je    .notPrime
+   183 00000231 B8[1C010000]               mov   eax, StringIsPrime
+   184 00000236 E83AFEFFFF                 call  sprintLF
+   185 0000023B 58                         pop   eax
+   186 0000023C EB0B                       jmp   .isPrime 
+   187                                  .notPrime:
+   188 0000023E B8[29010000]               mov   eax, StringIsNotPrime
+   189 00000243 E82DFEFFFF                 call  sprintLF  
+   190 00000248 58                         pop   eax
+   191                                  .isPrime:
+   192                                  ;to be continued
+   193                                  .exit:
+   194 00000249 E881FEFFFF                  call    quit

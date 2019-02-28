@@ -1,5 +1,8 @@
 ;a program to display the all primes less than or equal to the specified input integer
 
+;to change the Biggest number that can be analyzed,
+;just change the Max and MaxInput defination,then recompile it.
+
 ;functions.asm includes some useful API for basic functions:
 ;  sprint(eax),sprintLF(eax)     eax : the address of the specified string to be displayed.
 ;  atoi(eax)                     eax : the address of the ascii characters to be transformed,
@@ -10,7 +13,8 @@
 %include  'functions.asm'
 %define   PerByte 8
 %define   INPUTARRAYLENGTH 10
-%define   Max 10000000
+%define   Max 50000000
+%define   MaxInput 10000000
 %define   true '1'
 %define   false '0'
 
@@ -69,7 +73,7 @@ main:
    call  quit
 
 .testForTooBig:
-   cmp   eax, Max                 ; test for too big
+   cmp   eax, MaxInput                 ; test for too big
    jle   .continue
    mov   eax, StringFor2Big0
    call  sprint
